@@ -1,11 +1,11 @@
 /**
  * Schema #2: parsed Postgres execution plan tree.
  *
- * Produced by running `EXPLAIN (ANALYZE, FORMAT JSON, BUFFERS, VERBOSE)` and
- * parsing the resulting JSON. The raw fields mirror the JSON keys; the
- * `derived` block holds values our parser computes to encode the subtleties of
- * EXPLAIN ANALYZE output (per-loop averaging, child-inclusive timing, and
- * estimate-vs-actual row error).
+ * Produced by running `EXPLAIN (ANALYZE, FORMAT JSON, BUFFERS, VERBOSE)` on the
+ * target DB and parsing the resulting JSON. The raw fields mirror the JSON
+ * keys; the `derived` block holds values our parser computes to encode the
+ * subtleties of EXPLAIN ANALYZE output (per-loop averaging, child-inclusive
+ * timing, and estimate-vs-actual row error).
  */
 
 export type SortSpaceType = "Memory" | "Disk";

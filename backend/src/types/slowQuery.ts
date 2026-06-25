@@ -1,8 +1,8 @@
 /**
  * Schema #1: slow query tracking.
  *
- * Sourced from pg_stat_statements, which normalizes query text (so
- * `WHERE id = 5` and `WHERE id = 9` collapse to `WHERE id = $1`) and
+ * Sourced from pg_stat_statements (on the target DB), which normalizes query
+ * text (so `WHERE id = 5` and `WHERE id = 9` collapse to `WHERE id = $1`) and
  * accumulates call counts and timing. `bigint` columns are represented as
  * `string` here to avoid JavaScript number precision loss.
  */

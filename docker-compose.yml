@@ -1,0 +1,55 @@
+services:
+  # App metadata DB: stores the advisor's own data (tracked slow queries,
+  # diagnoses, history). This is the database the NestJS app owns and migrates.
+  app-db:
+    image: postgres:16
+    container_name: advisor-app-db
+    environment:
+      POSTGRES_USER: ${APP_DB_USER:-advisor}
+      POSTGRES_PASSWORD: ${APP_DB_PASSWORD:-advisor}
+      POSTGRES_DB: ${APP_DB_NAME:-advisor_meta}
+    ports:
+      - "${APP_DB_PORT:-5433}:5432"
+    volumes:
+      - app_db_data:/var/lib/postgresql/data
+      # *.sql files here run once, in alphabetical order, on first init.
+      - ./sql/app-db:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${APP_DB_USER:-advisor} -d ${APP_DB_NAME:-advisor_meta}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Target DB: a SEPARATE database we analyze. pg_stat_statements is loaded
+  # here via shared_preload_libraries so Postgres records query statistics.
+  target-db:
+    image: postgres:16
+    container_name: advisor-target-db
+    # shared_preload_libraries can ONLY be set at server start (not at runtime),
+    # which is why it lives here in `command` rather than in an init script.
+    command:
+      - "postgres"
+      - "-c"
+      - "shared_preload_libraries=pg_stat_statements"
+      - "-c"
+      - "pg_stat_statements.track=all"
+      - "-c"
+      - "pg_stat_statements.max=10000"
+    environment:
+      POSTGRES_USER: ${TARGET_DB_USER:-target}
+      POSTGRES_PASSWORD: ${TARGET_DB_PASSWORD:-target}
+      POSTGRES_DB: ${TARGET_DB_NAME:-target_app}
+    ports:
+      - "${TARGET_DB_PORT:-5434}:5432"
+    volumes:
+      - target_db_data:/var/lib/postgresql/data
+      - ./sql/target-db:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${TARGET_DB_USER:-target} -d ${TARGET_DB_NAME:-target_app}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  app_db_data:
+  target_db_data:
